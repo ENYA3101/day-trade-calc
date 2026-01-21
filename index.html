@@ -1,1 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>當沖損益計算機</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 React 和 ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- 引入 Babel 用於解析 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        /* 隱藏 Scrollbar 但保持捲動功能 */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body {
+            background-color: #f1f5f9; /* Slate-100 */
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- SVG Icons Components (Inline for single file portability) ---
+        const IconCalculator = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+        );
+        const IconRefresh = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+        );
+        const IconTrendingUp = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        );
+        const IconTrendingDown = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
+        );
+        const IconLayers = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
+        );
+        const IconPieChart = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        );
+        const IconArrowRightLeft = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg> // Using a generic chart/arrow icon as replacement or simple path
+        );
+        const IconSwap = ({ className }) => (
+             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+        );
+
+
+        const DayTradingCalc = () => {
+            // 狀態管理
+            const [tradeType, setTradeType] = useState('long'); // 'long' (做多) or 'short' (做空)
+            const [unitType, setUnitType] = useState('sheet'); // 'sheet' (張) or 'share' (零股)
+            
+            const [buyPrice, setBuyPrice] = useState('');
+            const [sellPrice, setSellPrice] = useState('');
+            const [quantity, setQuantity] = useState(1); // 預設 1 (張或股)
+            const [discount, setDiscount] = useState(2.8); // 預設 2.8 折
+            
+            // 計算結果狀態
+            const [results, setResults] = useState({
+                buyFee: 0,
+                sellFee: 0,
+                tax: 0,
+                totalCost: 0,
+                profit: 0,
+                roi: 0,
+                breakeven: 0,
+                totalShares: 0
+            });
+
+            // 常數
+            const FEE_RATE = 0.001425; // 公定手續費率
+            const TAX_RATE = 0.0015;   // 當沖稅率 (千分之1.5)
+
+            // 格式化數字 (加逗號)
+            const formatNumber = (num) => {
+                return new Intl.NumberFormat('zh-TW').format(Math.round(num));
+            };
+
+            const formatCurrency = (num) => {
+                return new Intl.NumberFormat('zh-TW', { style: 'currency', currency: 'TWD', minimumFractionDigits: 0 }).format(num);
+            };
+
+            // 處理計算邏輯
+            useEffect(() => {
+                const bPrice = parseFloat(buyPrice) || 0;
+                const sPrice = parseFloat(sellPrice) || 0;
+                const inputQty = parseFloat(quantity) || 0;
+                const disc = parseFloat(discount) || 10; 
+
+                if (inputQty === 0) return;
+
+                // 0. 判斷總股數 & 最低手續費設定
+                let totalShares = 0;
+                let minFee = 20;
+
+                if (unitType === 'sheet') {
+                totalShares = inputQty * 1000;
+                minFee = 20; // 整張低消 20
+                } else {
+                totalShares = inputQty;
+                minFee = 1;  // 零股低消 1
+                }
+
+                // 1. 計算成交金額
+                const buyAmount = bPrice * totalShares;
+                const sellAmount = sPrice * totalShares;
+
+                // 2. 計算手續費 (無條件捨去)
+                const discountRate = disc / 10;
+                
+                // 買入手續費
+                let bFee = Math.floor(buyAmount * FEE_RATE * discountRate);
+                if (buyAmount > 0 && bFee < minFee) bFee = minFee;
+
+                // 賣出手續費
+                let sFee = Math.floor(sellAmount * FEE_RATE * discountRate);
+                if (sellAmount > 0 && sFee < minFee) sFee = minFee;
+
+                // 3. 計算證交稅 (當沖稅率 0.15%)
+                const tradeTax = Math.floor(sellAmount * TAX_RATE);
+
+                // 4. 計算總成本
+                const totalCost = bFee + sFee + tradeTax;
+
+                // 5. 計算損益
+                let netProfit = 0;
+                if (tradeType === 'long') {
+                // 做多：(賣出金額 - 賣出手續費 - 稅) - (買入金額 + 買入手續費)
+                netProfit = sellAmount - buyAmount - totalCost;
+                } else {
+                // 做空：(賣出金額 - 賣出手續費 - 稅) - (買入金額 + 買入手續費)
+                netProfit = (sellAmount - sFee - tradeTax) - (buyAmount + bFee);
+                }
+
+                // 6. 計算報酬率
+                let roiVal = 0;
+                const baseAmount = tradeType === 'long' ? buyAmount : sellAmount;
+                
+                if (baseAmount > 0) {
+                roiVal = (netProfit / baseAmount) * 100;
+                }
+
+                // 7. 計算損益平衡點
+                let breakPrice = 0;
+                if (tradeType === 'long' && bPrice > 0) {
+                // 做多平衡點
+                const costFactor = 1 + (FEE_RATE * discountRate);
+                const revenueFactor = 1 - (FEE_RATE * discountRate) - TAX_RATE;
+                breakPrice = (bPrice * costFactor) / revenueFactor;
+                } else if (tradeType === 'short' && sPrice > 0) {
+                // 做空平衡點
+                const netSell = sPrice * (1 - (FEE_RATE * discountRate) - TAX_RATE);
+                breakPrice = netSell / (1 + (FEE_RATE * discountRate));
+                }
+
+                setResults({
+                buyFee: bFee,
+                sellFee: sFee,
+                tax: tradeTax,
+                totalCost: totalCost,
+                profit: netProfit,
+                roi: roiVal,
+                breakeven: breakPrice,
+                totalShares: totalShares
+                });
+
+            }, [buyPrice, sellPrice, quantity, discount, tradeType, unitType]);
+
+            // 重置
+            const handleReset = () => {
+                setBuyPrice('');
+                setSellPrice('');
+                setQuantity(1);
+                setDiscount(2.8);
+                setUnitType('sheet');
+            };
+
+            // 顏色輔助
+            const getProfitColor = (val) => {
+                if (val > 0) return 'text-red-600';
+                if (val < 0) return 'text-green-600';
+                return 'text-gray-600';
+            };
+
+            const getProfitBg = (val) => {
+                if (val > 0) return 'bg-red-50 border-red-200';
+                if (val < 0) return 'bg-green-50 border-green-200';
+                return 'bg-gray-50 border-gray-200';
+            };
+
+            return (
+                <div className="max-w-md mx-auto bg-white min-h-screen sm:min-h-0 sm:my-8 sm:rounded-2xl shadow-xl overflow-hidden font-sans text-slate-800">
+                
+                {/* Header */}
+                <div className="bg-slate-900 p-6 text-white flex items-center justify-between">
+                    <div>
+                    <h1 className="text-xl font-bold flex items-center gap-2">
+                        <IconCalculator className="w-6 h-6 text-yellow-400" />
+                        當沖損益試算
+                    </h1>
+                    <p className="text-slate-400 text-xs mt-1">
+                        {unitType === 'sheet' ? '整張模式 (低消$20)' : '零股模式 (低消$1)'}
+                    </p>
+                    </div>
+                    <button onClick={handleReset} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700 transition">
+                    <IconRefresh className="w-4 h-4 text-slate-300" />
+                    </button>
+                </div>
+
+                <div className="p-6 space-y-6">
+                    
+                    {/* 多空切換 */}
+                    <div className="flex bg-slate-100 p-1 rounded-lg">
+                    <button
+                        onClick={() => setTradeType('long')}
+                        className={`flex-1 py-2 rounded-md text-sm font-bold transition-all flex items-center justify-center gap-2
+                        ${tradeType === 'long' ? 'bg-red-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                        <IconTrendingUp className="w-4 h-4" />
+                        做多
+                    </button>
+                    <button
+                        onClick={() => setTradeType('short')}
+                        className={`flex-1 py-2 rounded-md text-sm font-bold transition-all flex items-center justify-center gap-2
+                        ${tradeType === 'short' ? 'bg-green-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                        <IconTrendingDown className="w-4 h-4" />
+                        做空
+                    </button>
+                    </div>
+
+                    {/* 輸入區塊 */}
+                    <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-500">
+                        {tradeType === 'long' ? '買入價格' : '賣出價格'}
+                        </label>
+                        <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                        <input
+                            type="number"
+                            value={tradeType === 'long' ? buyPrice : sellPrice}
+                            onChange={(e) => tradeType === 'long' ? setBuyPrice(e.target.value) : setSellPrice(e.target.value)}
+                            placeholder="0.00"
+                            className={`w-full pl-7 pr-3 py-3 rounded-xl border-2 focus:outline-none transition-colors font-mono text-lg
+                            ${tradeType === 'long' ? 'border-red-100 focus:border-red-500 bg-red-50/30' : 'border-green-100 focus:border-green-500 bg-green-50/30'}`}
+                        />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-500">
+                        {tradeType === 'long' ? '賣出價格' : '買回價格'}
+                        </label>
+                        <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                        <input
+                            type="number"
+                            value={tradeType === 'long' ? sellPrice : buyPrice}
+                            onChange={(e) => tradeType === 'long' ? setSellPrice(e.target.value) : setBuyPrice(e.target.value)}
+                            placeholder="0.00"
+                            className={`w-full pl-7 pr-3 py-3 rounded-xl border-2 focus:outline-none transition-colors font-mono text-lg
+                            ${tradeType === 'long' ? 'border-green-100 focus:border-green-500 bg-green-50/30' : 'border-red-100 focus:border-red-500 bg-red-50/30'}`}
+                        />
+                        </div>
+                    </div>
+                    </div>
+
+                    {/* 股數與單位選擇 */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-end">
+                        <label className="text-xs font-semibold text-slate-500">交易數量</label>
+                        <div className="flex bg-slate-100 rounded-md p-0.5 text-xs">
+                            <button 
+                            onClick={() => setUnitType('sheet')}
+                            className={`px-3 py-1 rounded transition-all ${unitType === 'sheet' ? 'bg-white shadow text-blue-600 font-bold' : 'text-slate-500'}`}
+                            >
+                            整張 (張)
+                            </button>
+                            <button 
+                            onClick={() => setUnitType('share')}
+                            className={`px-3 py-1 rounded transition-all ${unitType === 'share' ? 'bg-white shadow text-blue-600 font-bold' : 'text-slate-500'}`}
+                            >
+                            零股 (股)
+                            </button>
+                        </div>
+                        </div>
+                        
+                        <div className="relative">
+                        <input
+                            type="number"
+                            value={quantity}
+                            onChange={(e) => setQuantity(e.target.value)}
+                            className="w-full pl-10 pr-3 py-2 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none bg-slate-50 font-mono"
+                        />
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                            {unitType === 'sheet' ? <IconLayers className="w-4 h-4"/> : <IconPieChart className="w-4 h-4"/>}
+                        </div>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-mono">
+                            = {formatNumber(results.totalShares)} 股
+                        </div>
+                        </div>
+                    </div>
+
+                    {/* 折數設定 */}
+                    <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-500">券商折數</label>
+                        <div className="relative">
+                        <input
+                            type="number"
+                            step="0.1"
+                            value={discount}
+                            onChange={(e) => setDiscount(e.target.value)}
+                            className="w-full pl-3 pr-8 py-2 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none bg-slate-50 font-mono"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">折</span>
+                        </div>
+                    </div>
+
+                    {/* 快速選折數 */}
+                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    {[6.0, 3.0, 2.8, 2.0, 1.8, 1.68].map(d => (
+                        <button
+                        key={d}
+                        onClick={() => setDiscount(d)}
+                        className={`px-3 py-1 text-xs rounded-full border whitespace-nowrap transition-colors
+                            ${parseFloat(discount) === d 
+                            ? 'bg-blue-600 text-white border-blue-600' 
+                            : 'bg-white text-slate-600 border-slate-200 hover:border-blue-400'}`}
+                        >
+                        {d}折
+                        </button>
+                    ))}
+                    </div>
+
+                    {/* 結果大卡片 */}
+                    <div className={`rounded-2xl p-6 border-2 transition-all shadow-sm ${getProfitBg(results.profit)}`}>
+                    <div className="text-center">
+                        <p className="text-slate-500 text-sm font-medium mb-1">預估損益 (T+2)</p>
+                        <div className={`text-4xl font-black tracking-tight ${getProfitColor(results.profit)}`}>
+                        {results.profit > 0 ? '+' : ''}{formatCurrency(results.profit)}
+                        </div>
+                        
+                        <div className="mt-3 flex items-center justify-center gap-4 text-sm">
+                        <span className={`font-bold flex items-center ${getProfitColor(results.roi)}`}>
+                            {results.roi > 0 ? <IconTrendingUp className="w-4 h-4 mr-1"/> : <IconTrendingDown className="w-4 h-4 mr-1"/>}
+                            {results.roi.toFixed(2)}%
+                        </span>
+                        <span className="text-slate-400">|</span>
+                        <span className="text-slate-600">
+                            成本: ${formatNumber(results.totalCost)}
+                        </span>
+                        </div>
+                    </div>
+                    </div>
+
+                    {/* 詳細數據 */}
+                    <div className="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100">
+                    <div className="p-4 flex justify-between items-center">
+                        <span className="text-slate-500 text-sm flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
+                        買入手續費
+                        </span>
+                        <span className="font-mono text-slate-700">${formatNumber(results.buyFee)}</span>
+                    </div>
+                    <div className="p-4 flex justify-between items-center">
+                        <span className="text-slate-500 text-sm flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
+                        賣出手續費
+                        </span>
+                        <span className="font-mono text-slate-700">${formatNumber(results.sellFee)}</span>
+                    </div>
+                    <div className="p-4 flex justify-between items-center bg-slate-50/50">
+                        <span className="text-slate-500 text-sm flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
+                        交易稅 (0.15%)
+                        </span>
+                        <span className="font-mono text-slate-700">${formatNumber(results.tax)}</span>
+                    </div>
+                    <div className="p-4 flex justify-between items-center">
+                        <span className="text-blue-600 text-sm font-bold flex items-center gap-2">
+                        <IconSwap className="w-4 h-4" />
+                        {tradeType === 'long' ? '打平賣價' : '打平補回價'}
+                        </span>
+                        <span className="font-mono font-bold text-blue-600 text-lg">
+                        {results.breakeven > 0 ? results.breakeven.toFixed(2) : '-'}
+                        </span>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<DayTradingCalc />);
+    </script>
+</body>
+</html>
