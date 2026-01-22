@@ -3,32 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台股損益計算機</title>
-    <!-- 引入 Tailwind CSS -->
+    <title>台股損益計算機 (當沖/波段/零股)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 引入 React 和 ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- 引入 Babel 用於解析 JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <style>
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        body {
-            background-color: #f8fafc; /* Slate-50 */
-            -webkit-tap-highlight-color: transparent;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        body { background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body>
@@ -38,33 +24,21 @@
         const { useState, useEffect } = React;
 
         // --- Icons ---
-        const IconCalculator = ({ className }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
-        );
-        const IconRefresh = ({ className }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-        );
-        const IconTrendingUp = ({ className }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-        );
-        const IconTrendingDown = ({ className }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
-        );
-        const IconSwap = ({ className }) => (
-             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
-        );
-        const IconClock = ({ className }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        );
-        const IconCalendar = ({ className }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-        );
+        const IconCalculator = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>);
+        const IconRefresh = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>);
+        const IconTrendingUp = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>);
+        const IconTrendingDown = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>);
+        const IconSwap = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>);
+        const IconClock = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
+        const IconCalendar = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>);
+        const IconPlus = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="M12 5v14"/></svg>);
+        const IconMinus = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/></svg>);
 
         const App = () => {
             // --- State ---
-            const [tradeType, setTradeType] = useState('long'); // 'long' (做多) or 'short' (做空)
-            const [isDayTrade, setIsDayTrade] = useState(true); // true: 當沖(0.15%), false: 非當沖(0.3%)
-            const [unitType, setUnitType] = useState('sheet'); // 'sheet' (張) or 'share' (零股)
+            const [tradeType, setTradeType] = useState('long');
+            const [isDayTrade, setIsDayTrade] = useState(true);
+            const [unitType, setUnitType] = useState('sheet');
             
             const [buyPrice, setBuyPrice] = useState('');
             const [sellPrice, setSellPrice] = useState('');
@@ -72,24 +46,31 @@
             const [discount, setDiscount] = useState(2.8);
             
             const [results, setResults] = useState({
-                buyFee: 0,
-                sellFee: 0,
-                tax: 0,
-                totalCost: 0,
-                profit: 0,
-                roi: 0,
-                breakeven: 0,
-                totalShares: 0
+                buyFee: 0, sellFee: 0, tax: 0, totalCost: 0,
+                profit: 0, roi: 0, breakeven: 0, totalShares: 0
             });
 
-            // --- Constants ---
             const FEE_RATE = 0.001425;
             
-            // --- Helpers ---
             const formatNumber = (num) => new Intl.NumberFormat('zh-TW').format(Math.round(num));
             const formatCurrency = (num) => new Intl.NumberFormat('zh-TW', { style: 'currency', currency: 'TWD', minimumFractionDigits: 0 }).format(num);
 
-            // --- Calculation Effect ---
+            // --- Handlers ---
+            const handleQuantityChange = (delta) => {
+                setQuantity(prev => {
+                    const newVal = parseFloat(prev || 0) + delta;
+                    return newVal < 1 ? 1 : newVal;
+                });
+            };
+
+            const handleUnitTypeChange = (type) => {
+                setUnitType(type);
+                // 切換單位時給予一個合理的預設值
+                if (type === 'sheet') setQuantity(1);
+                else setQuantity(100); 
+            };
+
+            // --- Calculation ---
             useEffect(() => {
                 const bPrice = parseFloat(buyPrice) || 0;
                 const sPrice = parseFloat(sellPrice) || 0;
@@ -98,26 +79,20 @@
 
                 if (inputQty === 0) return;
 
-                // 1. 設定稅率
                 const currentTaxRate = isDayTrade ? 0.0015 : 0.003;
-
-                // 2. 設定股數 & 最低手續費
                 let totalShares = 0;
                 let minFee = 20;
 
                 if (unitType === 'sheet') {
                     totalShares = inputQty * 1000;
-                    minFee = 20; // 整張低消通常 20
+                    minFee = 20;
                 } else {
                     totalShares = inputQty;
-                    minFee = 1;  // 零股低消通常 1 (部分券商)
+                    minFee = 1;
                 }
 
-                // 3. 計算金額
                 const buyAmount = bPrice * totalShares;
                 const sellAmount = sPrice * totalShares;
-
-                // 4. 計算手續費 (無條件捨去)
                 const discountRate = disc / 10;
                 
                 let bFee = Math.floor(buyAmount * FEE_RATE * discountRate);
@@ -126,35 +101,25 @@
                 let sFee = Math.floor(sellAmount * FEE_RATE * discountRate);
                 if (sellAmount > 0 && sFee < minFee) sFee = minFee;
 
-                // 5. 計算證交稅 (無條件捨去)
                 const tradeTax = Math.floor(sellAmount * currentTaxRate);
-
-                // 6. 總成本
                 const totalCost = bFee + sFee + tradeTax;
 
-                // 7. 淨利
                 let netProfit = 0;
                 if (tradeType === 'long') {
                     netProfit = sellAmount - buyAmount - totalCost;
                 } else {
-                    // 做空: (賣出得款 - 賣手續費 - 稅) - (買回成本 + 買手續費)
                     netProfit = (sellAmount - sFee - tradeTax) - (buyAmount + bFee);
                 }
 
-                // 8. 報酬率
                 let roiVal = 0;
                 const baseAmount = tradeType === 'long' ? buyAmount : sellAmount;
                 if (baseAmount > 0) roiVal = (netProfit / baseAmount) * 100;
 
-                // 9. 損益平衡點
                 let breakPrice = 0;
                 if (tradeType === 'long' && bPrice > 0) {
                     const costFactor = 1 + (FEE_RATE * discountRate);
                     const revenueFactor = 1 - (FEE_RATE * discountRate) - currentTaxRate;
-                    // 避免除以零
-                    if (revenueFactor > 0) {
-                        breakPrice = (bPrice * costFactor) / revenueFactor;
-                    }
+                    if (revenueFactor > 0) breakPrice = (bPrice * costFactor) / revenueFactor;
                 } else if (tradeType === 'short' && sPrice > 0) {
                     const netSell = sPrice * (1 - (FEE_RATE * discountRate) - currentTaxRate);
                     const buyFactor = 1 + (FEE_RATE * discountRate);
@@ -162,24 +127,16 @@
                 }
 
                 setResults({
-                    buyFee: bFee,
-                    sellFee: sFee,
-                    tax: tradeTax,
-                    totalCost,
-                    profit: netProfit,
-                    roi: roiVal,
-                    breakeven: breakPrice,
-                    totalShares
+                    buyFee: bFee, sellFee: sFee, tax: tradeTax, totalCost,
+                    profit: netProfit, roi: roiVal, breakeven: breakPrice, totalShares
                 });
 
             }, [buyPrice, sellPrice, quantity, discount, tradeType, unitType, isDayTrade]);
 
-            // --- Handlers ---
             const handleReset = () => {
                 setBuyPrice('');
                 setSellPrice('');
-                setQuantity(1);
-                // 不重置折數，因為使用者通常固定
+                setQuantity(unitType === 'sheet' ? 1 : 100);
             };
 
             const getProfitColor = (val) => {
@@ -193,6 +150,11 @@
                 if (val < 0) return 'bg-green-50 border-green-200';
                 return 'bg-white border-slate-200';
             };
+
+            // 預設的數量選項
+            const quickQuantities = unitType === 'sheet' 
+                ? [1, 2, 3, 5, 10] 
+                : [10, 100, 500, 999];
 
             return (
                 <div className="max-w-md mx-auto min-h-screen sm:min-h-0 sm:my-8 bg-white sm:rounded-3xl shadow-2xl overflow-hidden font-sans text-slate-800">
@@ -219,150 +181,115 @@
 
                     <div className="px-5 -mt-6 relative z-20 space-y-5 pb-8">
                         
-                        {/* Control Panel Card */}
+                        {/* Control Panel */}
                         <div className="bg-white rounded-xl shadow-lg border border-slate-100 p-1">
-                            {/* Row 1: Long/Short */}
                             <div className="flex border-b border-slate-100">
-                                <button
-                                    onClick={() => setTradeType('long')}
-                                    className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-all rounded-tl-lg
-                                    ${tradeType === 'long' ? 'text-red-600 bg-red-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
-                                >
+                                <button onClick={() => setTradeType('long')} className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-all rounded-tl-lg ${tradeType === 'long' ? 'text-red-600 bg-red-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
                                     <IconTrendingUp className="w-4 h-4" /> 做多
                                 </button>
                                 <div className="w-px bg-slate-100"></div>
-                                <button
-                                    onClick={() => setTradeType('short')}
-                                    className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-all rounded-tr-lg
-                                    ${tradeType === 'short' ? 'text-green-600 bg-green-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
-                                >
+                                <button onClick={() => setTradeType('short')} className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-all rounded-tr-lg ${tradeType === 'short' ? 'text-green-600 bg-green-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}>
                                     <IconTrendingDown className="w-4 h-4" /> 做空
                                 </button>
                             </div>
-
-                            {/* Row 2: Day Trade Switch */}
                             <div className="flex border-b border-slate-100">
-                                <button
-                                    onClick={() => setIsDayTrade(true)}
-                                    className={`flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1.5 transition-all
-                                    ${isDayTrade ? 'text-blue-600 bg-blue-50' : 'text-slate-400 hover:bg-slate-50'}`}
-                                >
-                                    <IconClock className="w-3.5 h-3.5" /> 當沖 (稅0.15%)
+                                <button onClick={() => setIsDayTrade(true)} className={`flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${isDayTrade ? 'text-blue-600 bg-blue-50' : 'text-slate-400 hover:bg-slate-50'}`}>
+                                    <IconClock className="w-3.5 h-3.5" /> 當沖 (0.15%)
                                 </button>
                                 <div className="w-px bg-slate-100"></div>
-                                <button
-                                    onClick={() => setIsDayTrade(false)}
-                                    className={`flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1.5 transition-all
-                                    ${!isDayTrade ? 'text-purple-600 bg-purple-50' : 'text-slate-400 hover:bg-slate-50'}`}
-                                >
-                                    <IconCalendar className="w-3.5 h-3.5" /> 非當沖 (稅0.3%)
+                                <button onClick={() => setIsDayTrade(false)} className={`flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${!isDayTrade ? 'text-purple-600 bg-purple-50' : 'text-slate-400 hover:bg-slate-50'}`}>
+                                    <IconCalendar className="w-3.5 h-3.5" /> 非當沖 (0.3%)
                                 </button>
                             </div>
-
-                             {/* Row 3: Unit Type */}
                              <div className="flex">
-                                <button
-                                    onClick={() => setUnitType('sheet')}
-                                    className={`flex-1 py-2 text-xs font-medium transition-all rounded-bl-lg
-                                    ${unitType === 'sheet' ? 'text-slate-800 bg-slate-100 shadow-inner' : 'text-slate-400 hover:bg-slate-50'}`}
-                                >
+                                <button onClick={() => handleUnitTypeChange('sheet')} className={`flex-1 py-2 text-xs font-medium transition-all rounded-bl-lg ${unitType === 'sheet' ? 'text-slate-800 bg-slate-100 shadow-inner' : 'text-slate-400 hover:bg-slate-50'}`}>
                                     整張 (張) <span className="text-[10px] opacity-60 ml-1">低消$20</span>
                                 </button>
                                 <div className="w-px bg-slate-100"></div>
-                                <button
-                                    onClick={() => setUnitType('share')}
-                                    className={`flex-1 py-2 text-xs font-medium transition-all rounded-br-lg
-                                    ${unitType === 'share' ? 'text-slate-800 bg-slate-100 shadow-inner' : 'text-slate-400 hover:bg-slate-50'}`}
-                                >
+                                <button onClick={() => handleUnitTypeChange('share')} className={`flex-1 py-2 text-xs font-medium transition-all rounded-br-lg ${unitType === 'share' ? 'text-slate-800 bg-slate-100 shadow-inner' : 'text-slate-400 hover:bg-slate-50'}`}>
                                     零股 (股) <span className="text-[10px] opacity-60 ml-1">低消$1</span>
                                 </button>
                             </div>
                         </div>
 
-                        {/* Inputs Grid */}
+                        {/* Prices */}
                         <div className="grid grid-cols-2 gap-4">
-                            {/* Price Inputs */}
                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-500 ml-1">
-                                    {tradeType === 'long' ? '買入價格' : '賣出價格'}
-                                </label>
+                                <label className="text-xs font-bold text-slate-500 ml-1">{tradeType === 'long' ? '買入價格' : '賣出價格'}</label>
                                 <div className="relative group">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-600">$</span>
-                                    <input
-                                        type="number"
-                                        value={tradeType === 'long' ? buyPrice : sellPrice}
-                                        onChange={(e) => tradeType === 'long' ? setBuyPrice(e.target.value) : setSellPrice(e.target.value)}
-                                        placeholder="0.00"
-                                        className={`w-full pl-7 pr-3 py-3 rounded-xl border-2 focus:outline-none transition-colors font-mono text-lg shadow-sm
-                                        ${tradeType === 'long' ? 'border-red-100 focus:border-red-500' : 'border-green-100 focus:border-green-500'}`}
-                                    />
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                                    <input type="number" value={tradeType === 'long' ? buyPrice : sellPrice} onChange={(e) => tradeType === 'long' ? setBuyPrice(e.target.value) : setSellPrice(e.target.value)} placeholder="0.00" className={`w-full pl-7 pr-3 py-3 rounded-xl border-2 focus:outline-none transition-colors font-mono text-lg shadow-sm ${tradeType === 'long' ? 'border-red-100 focus:border-red-500' : 'border-green-100 focus:border-green-500'}`} />
                                 </div>
                             </div>
-
                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-500 ml-1">
-                                    {tradeType === 'long' ? '賣出價格' : '買回價格'}
-                                </label>
+                                <label className="text-xs font-bold text-slate-500 ml-1">{tradeType === 'long' ? '賣出價格' : '買回價格'}</label>
                                 <div className="relative group">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-600">$</span>
-                                    <input
-                                        type="number"
-                                        value={tradeType === 'long' ? sellPrice : buyPrice}
-                                        onChange={(e) => tradeType === 'long' ? setSellPrice(e.target.value) : setBuyPrice(e.target.value)}
-                                        placeholder="0.00"
-                                        className={`w-full pl-7 pr-3 py-3 rounded-xl border-2 focus:outline-none transition-colors font-mono text-lg shadow-sm
-                                        ${tradeType === 'long' ? 'border-green-100 focus:border-green-500' : 'border-red-100 focus:border-red-500'}`}
-                                    />
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                                    <input type="number" value={tradeType === 'long' ? sellPrice : buyPrice} onChange={(e) => tradeType === 'long' ? setSellPrice(e.target.value) : setBuyPrice(e.target.value)} placeholder="0.00" className={`w-full pl-7 pr-3 py-3 rounded-xl border-2 focus:outline-none transition-colors font-mono text-lg shadow-sm ${tradeType === 'long' ? 'border-green-100 focus:border-green-500' : 'border-red-100 focus:border-red-500'}`} />
                                 </div>
                             </div>
                         </div>
 
                         {/* Quantity & Discount */}
                         <div className="grid grid-cols-2 gap-4">
+                            {/* Quantity Section with Stepper */}
                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-500 ml-1">
-                                    數量 ({unitType === 'sheet' ? '張' : '股'})
-                                </label>
-                                <input
-                                    type="number"
-                                    value={quantity}
-                                    onChange={(e) => setQuantity(e.target.value)}
-                                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:outline-none bg-white font-mono shadow-sm"
-                                />
-                                <div className="text-[10px] text-right text-slate-400 h-4">
-                                   {unitType === 'sheet' && quantity ? `= ${formatNumber(quantity * 1000)} 股` : ''}
+                                <label className="text-xs font-bold text-slate-500 ml-1">數量 ({unitType === 'sheet' ? '張' : '股'})</label>
+                                <div className="flex items-center gap-1">
+                                    <button 
+                                        onClick={() => handleQuantityChange(unitType === 'sheet' ? -1 : -100)}
+                                        className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 active:scale-95 transition hover:bg-slate-50 shadow-sm"
+                                    >
+                                        <IconMinus className="w-4 h-4" />
+                                    </button>
+                                    
+                                    <input
+                                        type="number"
+                                        value={quantity}
+                                        onChange={(e) => setQuantity(e.target.value)}
+                                        className="flex-1 w-full text-center py-2 h-10 rounded-xl border border-slate-200 focus:border-blue-500 focus:outline-none bg-white font-mono shadow-sm"
+                                    />
+                                    
+                                    <button 
+                                        onClick={() => handleQuantityChange(unitType === 'sheet' ? 1 : 100)}
+                                        className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 active:scale-95 transition hover:bg-slate-50 shadow-sm"
+                                    >
+                                        <IconPlus className="w-4 h-4" />
+                                    </button>
                                 </div>
                             </div>
 
+                            {/* Discount Section */}
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-slate-500 ml-1">券商折數</label>
                                 <div className="relative">
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        value={discount}
-                                        onChange={(e) => setDiscount(e.target.value)}
-                                        className="w-full pl-4 pr-8 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:outline-none bg-white font-mono shadow-sm"
-                                    />
+                                    <input type="number" step="0.1" value={discount} onChange={(e) => setDiscount(e.target.value)} className="w-full pl-4 pr-8 py-2 h-10 rounded-xl border border-slate-200 focus:border-blue-500 focus:outline-none bg-white font-mono shadow-sm" />
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">折</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Quick Discount Buttons */}
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mt-2">
-                            {[6.0, 3.0, 2.8, 2.0, 1.8, 1.68].map(d => (
-                                <button
-                                    key={d}
-                                    onClick={() => setDiscount(d)}
-                                    className={`px-3 py-1 text-xs rounded-full border whitespace-nowrap transition-colors font-medium
-                                    ${parseFloat(discount) === d 
-                                    ? 'bg-slate-800 text-white border-slate-800' 
-                                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'}`}
-                                >
-                                    {d}折
-                                </button>
-                            ))}
+                        {/* Quick Selection Buttons (Discount & Quantity) */}
+                        <div className="space-y-3 -mt-1">
+                             {/* Quantity Quick Select */}
+                            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                                <span className="text-[10px] text-slate-400 flex items-center shrink-0">快速數量:</span>
+                                {quickQuantities.map(q => (
+                                    <button key={q} onClick={() => setQuantity(q)} className={`px-3 py-1 text-xs rounded-full border whitespace-nowrap transition-colors font-medium ${parseInt(quantity) === q ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'}`}>
+                                        {q}{unitType === 'sheet' ? '' : ''}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Discount Quick Select */}
+                            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                                <span className="text-[10px] text-slate-400 flex items-center shrink-0">快速折數:</span>
+                                {[6.0, 3.0, 2.8, 2.0, 1.8, 1.68].map(d => (
+                                    <button key={d} onClick={() => setDiscount(d)} className={`px-3 py-1 text-xs rounded-full border whitespace-nowrap transition-colors font-medium ${parseFloat(discount) === d ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'}`}>
+                                        {d}折
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Result Card */}
@@ -372,52 +299,24 @@
                                 <div className={`text-4xl font-black tracking-tighter ${getProfitColor(results.profit)}`}>
                                     {results.profit > 0 ? '+' : ''}{formatCurrency(results.profit)}
                                 </div>
-                                
                                 <div className="mt-4 flex items-center justify-center gap-3 text-sm">
                                     <div className={`px-3 py-1 rounded-full font-bold flex items-center bg-white/50 backdrop-blur-sm border border-black/5 ${getProfitColor(results.roi)}`}>
                                         {results.roi > 0 ? <IconTrendingUp className="w-3.5 h-3.5 mr-1"/> : <IconTrendingDown className="w-3.5 h-3.5 mr-1"/>}
                                         {results.roi.toFixed(2)}%
                                     </div>
                                     <span className="text-slate-300">|</span>
-                                    <span className="text-slate-500 font-mono text-xs">
-                                        成本: ${formatNumber(results.totalCost)}
-                                    </span>
+                                    <span className="text-slate-500 font-mono text-xs">成本: ${formatNumber(results.totalCost)}</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Details List */}
+                        {/* Details */}
                         <div className="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100 shadow-sm text-sm">
-                            <div className="p-3.5 flex justify-between items-center">
-                                <span className="text-slate-500 flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div> 買手續費
-                                </span>
-                                <span className="font-mono text-slate-700">${formatNumber(results.buyFee)}</span>
-                            </div>
-                            <div className="p-3.5 flex justify-between items-center">
-                                <span className="text-slate-500 flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div> 賣手續費
-                                </span>
-                                <span className="font-mono text-slate-700">${formatNumber(results.sellFee)}</span>
-                            </div>
-                            <div className="p-3.5 flex justify-between items-center bg-slate-50/50">
-                                <span className="text-slate-500 flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-orange-400"></div> 
-                                    交易稅 ({isDayTrade ? '0.15%' : '0.3%'})
-                                </span>
-                                <span className="font-mono text-slate-700">${formatNumber(results.tax)}</span>
-                            </div>
-                            <div className="p-3.5 flex justify-between items-center">
-                                <span className="text-blue-600 font-bold flex items-center gap-2">
-                                    <IconSwap className="w-4 h-4" /> 
-                                    {tradeType === 'long' ? '打平賣價' : '打平補回價'}
-                                </span>
-                                <span className="font-mono font-bold text-blue-600 text-base">
-                                    {results.breakeven > 0 ? results.breakeven.toFixed(2) : '-'}
-                                </span>
-                            </div>
+                            <div className="p-3.5 flex justify-between items-center"><span className="text-slate-500 flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div> 買手續費</span><span className="font-mono text-slate-700">${formatNumber(results.buyFee)}</span></div>
+                            <div className="p-3.5 flex justify-between items-center"><span className="text-slate-500 flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div> 賣手續費</span><span className="font-mono text-slate-700">${formatNumber(results.sellFee)}</span></div>
+                            <div className="p-3.5 flex justify-between items-center bg-slate-50/50"><span className="text-slate-500 flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-orange-400"></div> 交易稅 ({isDayTrade ? '0.15%' : '0.3%'})</span><span className="font-mono text-slate-700">${formatNumber(results.tax)}</span></div>
+                            <div className="p-3.5 flex justify-between items-center"><span className="text-blue-600 font-bold flex items-center gap-2"><IconSwap className="w-4 h-4" /> {tradeType === 'long' ? '打平賣價' : '打平補回價'}</span><span className="font-mono font-bold text-blue-600 text-base">{results.breakeven > 0 ? results.breakeven.toFixed(2) : '-'}</span></div>
                         </div>
-
                     </div>
                 </div>
             );
@@ -428,4 +327,3 @@
     </script>
 </body>
 </html>
-
