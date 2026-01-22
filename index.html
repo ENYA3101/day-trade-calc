@@ -288,7 +288,7 @@
                         <div className="space-y-3 -mt-1">
                              {/* 數量快速選擇 */}
                             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                                <span className="text-[10px] text-slate-400 flex items-center shrink-0">快速數量:</span>
+                                <span className="text-[10px] text-slate-400 flex items-center shrink-0">數量:</span>
                                 {quickQuantities.map(q => (
                                     <button key={q} onClick={() => setQuantity(q)} className={`px-3 py-1 text-xs rounded-full border whitespace-nowrap transition-colors font-medium ${parseInt(quantity) === q ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'}`}>
                                         {q}{unitType === 'sheet' ? '' : ''}
@@ -298,7 +298,7 @@
 
                             {/* 折數快速選擇 */}
                             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                                <span className="text-[10px] text-slate-400 flex items-center shrink-0">快速折數:</span>
+                                <span className="text-[10px] text-slate-400 flex items-center shrink-0">折數:</span>
                                 {[6.0, 3.0, 2.8, 2.0, 1.8, 1.68].map(d => (
                                     <button key={d} onClick={() => setDiscount(d)} className={`px-3 py-1 text-xs rounded-full border whitespace-nowrap transition-colors font-medium ${parseFloat(discount) === d ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'}`}>
                                         {d}折
