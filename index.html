@@ -25,7 +25,6 @@
         <div style="height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #64748b; font-family: sans-serif;">
             <div class="loader"></div>
             <p>計算機載入中...</p>
-            <p style="font-size: 12px; margin-top: 8px;">(若持續停在此畫面，請嘗試重新整理網頁)</p>
         </div>
     </div>
 
@@ -50,8 +49,10 @@
             const [sellPrice, setSellPrice] = useState('');
             const [quantity, setQuantity] = useState(1);
             const [discount, setDiscount] = useState(1.8);
+            
+            // 新增 principal (本金) 狀態
             const [results, setResults] = useState({
-                buyFee: 0, sellFee: 0, tax: 0, totalCost: 0,
+                buyFee: 0, sellFee: 0, tax: 0, totalCost: 0, principal: 0,
                 profit: 0, roi: 0, breakeven: 0, totalShares: 0
             });
 
@@ -104,7 +105,17 @@
                 if (sellAmount > 0 && sFee < minFee) sFee = minFee;
 
                 const tradeTax = Math.floor(sellAmount * currentTaxRate);
+                
+                // 交易費用 (手續費 + 稅金)
                 const totalCost = bFee + sFee + tradeTax;
+
+                // 計算投入本金
+                let principalAmount = 0;
+                if (tradeType === 'long') {
+                    principalAmount = buyAmount + bFee; // 做多本金 = 股票價值 + 買入手續費
+                } else {
+                    principalAmount = sellAmount; // 做空基準以賣出價值計算
+                }
 
                 let netProfit = 0;
                 if (tradeType === 'long') {
@@ -129,7 +140,7 @@
                 }
 
                 setResults({
-                    buyFee: bFee, sellFee: sFee, tax: tradeTax, totalCost,
+                    buyFee: bFee, sellFee: sFee, tax: tradeTax, totalCost, principal: principalAmount,
                     profit: netProfit, roi: roiVal, breakeven: breakPrice, totalShares
                 });
 
@@ -262,14 +273,19 @@
                                 <div className={`text-4xl font-black tracking-tighter ${getProfitColor(results.profit)}`}>
                                     {results.profit > 0 ? '+' : ''}{formatCurrency(results.profit)}
                                 </div>
-                                <div className="mt-4 flex items-center justify-center gap-3 text-sm">
-                                    <div className={`px-3 py-1 rounded-full font-bold flex items-center bg-white/50 backdrop-blur-sm border border-black/5 ${getProfitColor(results.roi)}`}>
+                                
+                                {/* 這裡修改了排版，同時顯示本金與費用 */}
+                                <div className="mt-4 flex items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                                    <div className={`px-2 sm:px-3 py-1 rounded-full font-bold flex items-center bg-white/50 backdrop-blur-sm border border-black/5 ${getProfitColor(results.roi)}`}>
                                         {results.roi > 0 ? <IconTrendingUp className="w-3.5 h-3.5 mr-1"/> : <IconTrendingDown className="w-3.5 h-3.5 mr-1"/>}
                                         {results.roi.toFixed(2)}%
                                     </div>
                                     <span className="text-slate-300">|</span>
-                                    <span className="text-slate-500 font-mono text-xs">成本: ${formatNumber(results.totalCost)}</span>
+                                    <span className="text-slate-500 font-mono">本金: ${formatNumber(results.principal)}</span>
+                                    <span className="text-slate-300">|</span>
+                                    <span className="text-slate-500 font-mono">費用: ${formatNumber(results.totalCost)}</span>
                                 </div>
+                                
                             </div>
                         </div>
 
